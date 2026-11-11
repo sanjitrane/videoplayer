@@ -1,0 +1,43 @@
+export type PlayerEngine = 
+| "videojs"
+|"shaka"
+|"hlsjs"
+|"dashjs";
+
+export type StreamingFormat = 
+| "mp4"
+|"hls"
+|"dash";
+
+export interface DRMConfig{
+  type: "widevine" | "playready" | "fairplay";
+  licenseUrl: string;
+  certificateUrl?: string;
+  requestHeaders?: Record<string, string>;
+}
+
+export interface VideoSource{
+  url: string;
+  format: StreamingFormat;
+  mimeType?: string;
+}
+
+export interface PlayerConfig{
+  engine: PlayerEngine;
+  source: VideoSource;
+  drm?: DRMConfig;
+  autoplay?: boolean;
+  muted?: boolean;
+  controls?: boolean;
+  volume?: number;
+}
+
+export interface PlayerCapabilities{
+  hls: boolean;
+  dash: boolean;
+  drm: boolean;
+  playbackRate: boolean;
+  qualitySelection: boolean;
+  subtitles: boolean;
+  audioTrackSelection: boolean;
+}
