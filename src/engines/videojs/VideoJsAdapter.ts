@@ -4,6 +4,9 @@ import "video.js/dist/video-js.css";
 import type {
   PlayerConfig,
   PlayerCapabilities,
+  QualitySelection,
+  VHSRepresentation,
+  QualityLevel,
 } from "../../types/player.types";
 import type {
   PlayerEventData,
@@ -13,6 +16,12 @@ import type {
 import type { IPlayerEngine } from "../IPlayerEngine";
 
 type VideoJSPlayer = ReturnType<typeof videojs>;
+
+type VHSCompatibleTech = {
+  vhs?: {
+    representations: () => VHSRepresentation[];
+  };
+};
 
 export class VideoJsAdapter implements IPlayerEngine {
   private player: VideoJSPlayer | null = null;
@@ -31,7 +40,7 @@ export class VideoJsAdapter implements IPlayerEngine {
 
     if (!this.supportedFormats.includes(config.source.format)) {
       throw new Error(
-        `Video.js adapter currently supports MP4 only. Received: ${config.source.format}`,
+        `Video.js adapter currently supports MP4 and HLS. Received: ${config.source.format}`,
       );
     }
 
@@ -152,6 +161,15 @@ export class VideoJsAdapter implements IPlayerEngine {
     this.emit?.(event);
   }
 
+  private getVHSRepresentations(): VHSRepresentation[] {
+    const player = this.player;
+    if (!player || player.isDisposed()) {
+      return [];
+    }
+    const tech = player.tech() as unknown as VHSCompatibleTech;
+    return tech.vhs?.representations() ?? [];
+  }
+
   async play(): Promise<void> {
     await this.getPlayer().play();
   }
@@ -204,10 +222,32 @@ export class VideoJsAdapter implements IPlayerEngine {
       dash: false,
       drm: false,
       playbackRate: true,
-      qualitySelection: false,
+      qualitySelection: true,
       subtitles: false,
       audioTrackSelection: false,
     };
+  }
+
+  getAvailableQualities(): QualityLevel[] {
+    return this.getVHSRepresentations().map((representation) => ({
+      id: representation.id,
+      width: representation.width,
+      height: representation.height,
+      bitrate: representation.bandwidth,
+    }));
+  }
+
+  setQuality(quality: QualitySelection): void {
+    const representations = this.getVHSRepresentations();
+    if (quality === "auto") {
+      representations.forEach((representation) => {
+        representation.enabled(true);
+      });
+      return;
+    }
+    representations.forEach((representation) => {
+      representation.enabled(representation.id === quality);
+    });
   }
 
   async destroy(): Promise<void> {

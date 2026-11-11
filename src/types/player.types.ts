@@ -42,3 +42,20 @@ export interface HLSConfig {
   bandwidth?: number;
   limitRenditionByPlayerDimensions?: boolean;
 }
+
+export interface QualityLevel {
+  id: string;
+  width: number;
+  height: number;
+  bitrate: number;
+}
+
+export type QualitySelection = "auto" | string;
+
+export interface VHSRepresentation {
+  id: string;
+  width: number;
+  height: number;
+  bandwidth: number;
+  enabled: (enabled?: boolean) => boolean;
+}

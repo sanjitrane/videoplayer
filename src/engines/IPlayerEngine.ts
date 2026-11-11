@@ -1,4 +1,9 @@
-import type { PlayerConfig, PlayerCapabilities } from "../types/player.types";
+import type {
+  PlayerConfig,
+  PlayerCapabilities,
+  QualityLevel,
+  QualitySelection,
+} from "../types/player.types";
 import type { PlayerEventListener } from "../types/events.types";
 
 export interface IPlayerEngine {
@@ -19,4 +24,6 @@ export interface IPlayerEngine {
   getPaused(): boolean;
   getCapabilities(): PlayerCapabilities;
   destroy(): Promise<void>;
+  getAvailableQualities(): QualityLevel[];
+  setQuality(quality: QualitySelection): void;
 }

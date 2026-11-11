@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { PlayerWrapper } from "../../core/PlayerWrapper";
 import { engineFactory } from "../../core/EngineFactory";
-import type { PlayerConfig } from "../../types/player.types";
+import type { PlayerConfig, QualityLevel } from "../../types/player.types";
 
 import "./VideoPlayer.css";
 
@@ -11,13 +11,23 @@ interface VideoPlayerProps {
 
 export function VideoPlayer({ config }: VideoPlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const playerRef = useRef<PlayerWrapper | null>(null);
   const [status, setStatus] = useState("Initializing");
   const [error, setError] = useState<string | null>(null);
+  const [qualityLevels, setQualityLevels] = useState<QualityLevel[]>([]);
+  const [selectedQuality, setSelectedQuality] = useState("auto");
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
     let disposed = false;
+    let qualityPollId: number | undefined;
+    let qualityAttempts = 0;
+
+    setStatus("Initializing");
+    setError(null);
+    setQualityLevels([]);
+    setSelectedQuality("auto");
 
     const videoElement = document.createElement("video");
     videoElement.className = "video-js vjs-big-play-centered";
@@ -25,6 +35,38 @@ export function VideoPlayer({ config }: VideoPlayerProps) {
     container.appendChild(videoElement);
 
     const player = new PlayerWrapper(config, engineFactory);
+    playerRef.current = player;
+
+    // to test in browser
+    /*if (import.meta.env.DEV) {
+      (window as any).__playerWrapper = player;
+    }*/
+
+    const stopQualityPolling = () => {
+      if (qualityPollId !== undefined) {
+        window.clearInterval(qualityPollId);
+        qualityPollId = undefined;
+      }
+    };
+
+    const loadQualities = () => {
+      if (disposed) return;
+      qualityAttempts++;
+      try {
+        const qualities = player.getAvailableQualities();
+        if (qualities.length > 0) {
+          setQualityLevels(qualities);
+          stopQualityPolling();
+          return;
+        }
+      } catch {
+        //Player may not be ready yet
+      }
+      // Stop checking after 15 sec
+      if (qualityAttempts >= 30) {
+        stopQualityPolling();
+      }
+    };
 
     player.on("ready", () => {
       if (!disposed) {
@@ -64,36 +106,84 @@ export function VideoPlayer({ config }: VideoPlayerProps) {
     });
 
     const initializePromise = player.initialize(videoElement);
-    initializePromise.catch((err: unknown) => {
-      if (!disposed) {
-        setError(
-          err instanceof Error ? err.message : "Player initialization failed",
-        );
+    initializePromise
+      .then(() => {
+        if (disposed) return;
+        // check immediately, then poll until VHS renditions are available
+        loadQualities();
+        if (qualityPollId === undefined) {
+          qualityPollId = window.setInterval(loadQualities, 500);
+        }
+      })
+      .catch((err: unknown) => {
+        if (!disposed) {
+          setError(
+            err instanceof Error ? err.message : "Player initialization failed",
+          );
 
-        setStatus("Error");
-      }
-    });
+          setStatus("Error");
+        }
+      });
 
     return () => {
       disposed = true;
+      stopQualityPolling();
       // Wait for initialization to finish before disposing
       // the engine, avoiding an initialization/disposal race.
       void initializePromise.then(
         async () => {
           await player.destroy();
+          if (playerRef.current === player) {
+            playerRef.current = null;
+          }
           videoElement.remove();
         },
         async () => {
           await player.destroy();
+          if (playerRef.current === player) {
+            playerRef.current = null;
+          }
           videoElement.remove();
         },
       );
     };
   }, [config]);
 
+  const handleQualityChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const quality = event.target.value;
+    try {
+      // "auto" or a specific rendition ID.
+      // This changes the allowed renditions in VHS.
+      // It does not immediately guarantee a resolution change.
+      // The next segment boundary may be required.
+      // The selected value represents the user's preference.
+      playerRef.current?.setQuality(quality);
+      setSelectedQuality(quality);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to change quality");
+    }
+  };
+
   return (
     <div className="video-player-container">
       <div ref={containerRef} data-vjs-player />
+      {qualityLevels.length > 0 && (
+        <div className="player-quality-control">
+          <label htmlFor="player-quality">Quality</label>
+          <select
+            id="player-quality"
+            value={selectedQuality}
+            onChange={handleQualityChange}
+          >
+            <option value="auto">Auto</option>
+            {qualityLevels.map((quality) => (
+              <option key={quality.id} value={quality.id}>
+                {quality.height}p ({Math.round(quality.bitrate / 1000)} kbps)
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
       <div className="player-status">Status: {status}</div>
 
       {error && (

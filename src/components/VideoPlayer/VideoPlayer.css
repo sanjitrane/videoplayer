@@ -28,3 +28,25 @@
   background: #fee2e2;
   border-radius: 4px;
 }
+
+.player-quality-control {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.player-quality-control label {
+  font-weight: 500;
+}
+
+.player-quality-control select {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+  color: #222;
+  cursor: pointer;
+}

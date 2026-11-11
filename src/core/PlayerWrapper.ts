@@ -1,4 +1,9 @@
-import type { PlayerConfig, PlayerCapabilities } from "../types/player.types";
+import type {
+  PlayerConfig,
+  PlayerCapabilities,
+  QualityLevel,
+  QualitySelection,
+} from "../types/player.types";
 
 import type { PlayerEvent, PlayerEventListener } from "../types/events.types";
 
@@ -96,6 +101,15 @@ export class PlayerWrapper {
   getCapabilities(): PlayerCapabilities {
     this.ensureInitalized();
     return this.engine!.getCapabilities();
+  }
+
+  getAvailableQualities(): QualityLevel[] {
+    this.ensureInitalized();
+    return this.engine?.getAvailableQualities() ?? [];
+  }
+
+  setQuality(quality: QualitySelection): void {
+    this.engine?.setQuality(quality);
   }
 
   private ensureInitalized(): void {

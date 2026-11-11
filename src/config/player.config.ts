@@ -18,7 +18,7 @@ import type { PlayerConfig } from "../types/player.types";
 export const playerConfig: PlayerConfig = {
   engine: "videojs",
   source: {
-    url: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+    url: "https://d2zihajmogu5jn.cloudfront.net/bipbop-advanced/bipbop_16x9_variant.m3u8", //"https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
     format: "hls",
     mimeType: "application/x-mpegURL",
   },
