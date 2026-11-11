@@ -14,10 +14,7 @@ export class PlayerWrapper {
   private engineFactory: EngineFactory;
   private events = new EventManager();
 
-  constructor(
-    config: PlayerConfig,
-    engineFactory: EngineFactory,
-  ) {
+  constructor(config: PlayerConfig, engineFactory: EngineFactory) {
     this.config = config;
     this.engineFactory = engineFactory;
   }
@@ -30,7 +27,7 @@ export class PlayerWrapper {
 
     this.engine = this.engineFactory.create(this.config.engine);
 
-    await this.engine.initalize(videoElement, this.config, (event) =>
+    await this.engine.initialize(videoElement, this.config, (event) =>
       this.events.emit(event),
     );
   }

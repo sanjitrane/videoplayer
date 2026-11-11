@@ -1,0 +1,30 @@
+.video-player-container {
+  width: 100%;
+  max-width: 1000px;
+  margin: 24px auto;
+}
+
+.video-player-container [data-vjs-player] {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+}
+
+.video-player-container .video-js {
+  width: 100%;
+  height: 100%;
+}
+
+.player-status {
+  margin-top: 12px;
+  font-size: 14px;
+  color: #666;
+}
+
+.player-error {
+  margin-top: 12px;
+  padding: 12px;
+  color: #b91c1c;
+  background: #fee2e2;
+  border-radius: 4px;
+}
