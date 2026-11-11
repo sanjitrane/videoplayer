@@ -18,6 +18,7 @@ export class VideoJsAdapter implements IPlayerEngine {
   private player: VideoJSPlayer | null = null;
 
   private emit?: PlayerEventListener;
+  private supportedFormats = ["mp4", "hls"];
 
   async initialize(
     videoElement: HTMLVideoElement,
@@ -28,7 +29,7 @@ export class VideoJsAdapter implements IPlayerEngine {
       throw new Error("Video.js is already initialized");
     }
 
-    if (config.source.format !== "mp4") {
+    if (!this.supportedFormats.includes(config.source.format)) {
       throw new Error(
         `Video.js adapter currently supports MP4 only. Received: ${config.source.format}`,
       );
@@ -48,6 +49,25 @@ export class VideoJsAdapter implements IPlayerEngine {
       responsive: true,
       preload: "auto",
       playbackRates: [0.5, 1, 1.25, 1.5, 2],
+      html5: {
+        vhs: {
+          ...(config.hls?.withCredentials !== undefined && {
+            withCredentials: config.hls.withCredentials,
+          }),
+
+          ...(config.hls?.overrideNative !== undefined && {
+            overrideNative: config.hls.overrideNative,
+          }),
+
+          ...(config.hls?.bandwidth !== undefined && {
+            bandwidth: config.hls.bandwidth,
+          }),
+          ...(config.hls?.limitRenditionByPlayerDimensions !== undefined && {
+            limitRenditionByPlayerDimensions:
+              config.hls.limitRenditionByPlayerDimensions,
+          }),
+        },
+      },
     });
 
     this.player = player;
@@ -62,9 +82,14 @@ export class VideoJsAdapter implements IPlayerEngine {
           return;
         }
         try {
+          const mimeType =
+            config.source.mimeType ??
+            (config.source.format === "hls"
+              ? "application/x-mpegURL"
+              : "video/mp4");
           player.src({
             src: config.source.url,
-            type: config.source.mimeType ?? "video/mp4",
+            type: mimeType,
           });
 
           player.volume(config.volume ?? 1);
@@ -175,7 +200,7 @@ export class VideoJsAdapter implements IPlayerEngine {
 
   getCapabilities(): PlayerCapabilities {
     return {
-      hls: false,
+      hls: true,
       dash: false,
       drm: false,
       playbackRate: true,

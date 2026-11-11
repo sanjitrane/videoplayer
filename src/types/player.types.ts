@@ -1,38 +1,32 @@
-export type PlayerEngine = 
-| "videojs"
-|"shaka"
-|"hlsjs"
-|"dashjs";
+export type PlayerEngine = "videojs" | "shaka" | "hlsjs" | "dashjs";
 
-export type StreamingFormat = 
-| "mp4"
-|"hls"
-|"dash";
+export type StreamingFormat = "mp4" | "hls" | "dash";
 
-export interface DRMConfig{
+export interface DRMConfig {
   type: "widevine" | "playready" | "fairplay";
   licenseUrl: string;
   certificateUrl?: string;
   requestHeaders?: Record<string, string>;
 }
 
-export interface VideoSource{
+export interface VideoSource {
   url: string;
   format: StreamingFormat;
   mimeType?: string;
 }
 
-export interface PlayerConfig{
+export interface PlayerConfig {
   engine: PlayerEngine;
   source: VideoSource;
   drm?: DRMConfig;
+  hls?: HLSConfig;
   autoplay?: boolean;
   muted?: boolean;
   controls?: boolean;
   volume?: number;
 }
 
-export interface PlayerCapabilities{
+export interface PlayerCapabilities {
   hls: boolean;
   dash: boolean;
   drm: boolean;
@@ -40,4 +34,11 @@ export interface PlayerCapabilities{
   qualitySelection: boolean;
   subtitles: boolean;
   audioTrackSelection: boolean;
+}
+
+export interface HLSConfig {
+  withCredentials?: boolean;
+  overrideNative?: boolean;
+  bandwidth?: number;
+  limitRenditionByPlayerDimensions?: boolean;
 }
