@@ -59,3 +59,10 @@ export interface VHSRepresentation {
   bandwidth: number;
   enabled: (enabled?: boolean) => boolean;
 }
+
+export interface PlaybackStats {
+  width: number;
+  height: number;
+  bitrate: number;
+  bandwidth: number;
+}

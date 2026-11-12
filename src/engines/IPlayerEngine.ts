@@ -3,6 +3,7 @@ import type {
   PlayerCapabilities,
   QualityLevel,
   QualitySelection,
+  PlaybackStats,
 } from "../types/player.types";
 import type { PlayerEventListener } from "../types/events.types";
 
@@ -26,4 +27,5 @@ export interface IPlayerEngine {
   destroy(): Promise<void>;
   getAvailableQualities(): QualityLevel[];
   setQuality(quality: QualitySelection): void;
+  getPlaybackStats(): PlaybackStats;
 }

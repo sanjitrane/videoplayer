@@ -7,6 +7,7 @@ import type {
   QualitySelection,
   VHSRepresentation,
   QualityLevel,
+  PlaybackStats,
 } from "../../types/player.types";
 import type {
   PlayerEventData,
@@ -20,6 +21,14 @@ type VideoJSPlayer = ReturnType<typeof videojs>;
 type VHSCompatibleTech = {
   vhs?: {
     representations: () => VHSRepresentation[];
+    bandwidth?: number;
+    playlists?: {
+      media: () => {
+        attributes?: {
+          BANDWIDTH?: number;
+        };
+      } | null;
+    };
   };
 };
 
@@ -248,6 +257,36 @@ export class VideoJsAdapter implements IPlayerEngine {
     representations.forEach((representation) => {
       representation.enabled(representation.id === quality);
     });
+  }
+
+  getPlaybackStats(): PlaybackStats {
+    const player = this.player;
+    if (!player || player.isDisposed()) {
+      return {
+        width: 0,
+        height: 0,
+        bitrate: 0,
+        bandwidth: 0,
+      };
+    }
+
+    const width = player.videoWidth() || 0;
+    const height = player.videoHeight() || 0;
+    const tech = player.tech() as unknown as VHSCompatibleTech;
+    const vhs = tech.vhs;
+    let bitrate = 0;
+    try {
+      bitrate = vhs?.playlists?.media()?.attributes?.BANDWIDTH ?? 0;
+    } catch {
+      // Active playlist may not be available yet
+    }
+
+    return {
+      width,
+      height,
+      bitrate,
+      bandwidth: vhs?.bandwidth ?? 0,
+    };
   }
 
   async destroy(): Promise<void> {

@@ -1,6 +1,7 @@
 import type {
   PlayerConfig,
   PlayerCapabilities,
+  PlaybackStats,
   QualityLevel,
   QualitySelection,
 } from "../types/player.types";
@@ -110,6 +111,11 @@ export class PlayerWrapper {
 
   setQuality(quality: QualitySelection): void {
     this.engine?.setQuality(quality);
+  }
+
+  getPlaybackStats(): PlaybackStats {
+    this.ensureInitalized();
+    return this.engine!.getPlaybackStats();
   }
 
   private ensureInitalized(): void {

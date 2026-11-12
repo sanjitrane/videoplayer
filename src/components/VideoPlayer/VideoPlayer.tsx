@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { PlayerWrapper } from "../../core/PlayerWrapper";
 import { engineFactory } from "../../core/EngineFactory";
-import type { PlayerConfig, QualityLevel } from "../../types/player.types";
+import type {
+  PlaybackStats,
+  PlayerConfig,
+  QualityLevel,
+} from "../../types/player.types";
 
 import "./VideoPlayer.css";
 
@@ -16,6 +20,12 @@ export function VideoPlayer({ config }: VideoPlayerProps) {
   const [error, setError] = useState<string | null>(null);
   const [qualityLevels, setQualityLevels] = useState<QualityLevel[]>([]);
   const [selectedQuality, setSelectedQuality] = useState("auto");
+  const [playbackStats, setPlaybackStats] = useState<PlaybackStats>({
+    width: 0,
+    height: 0,
+    bitrate: 0,
+    bandwidth: 0,
+  });
 
   useEffect(() => {
     const container = containerRef.current;
@@ -28,6 +38,12 @@ export function VideoPlayer({ config }: VideoPlayerProps) {
     setError(null);
     setQualityLevels([]);
     setSelectedQuality("auto");
+    setPlaybackStats({
+      width: 0,
+      height: 0,
+      bitrate: 0,
+      bandwidth: 0,
+    });
 
     const videoElement = document.createElement("video");
     videoElement.className = "video-js vjs-big-play-centered";
@@ -71,6 +87,7 @@ export function VideoPlayer({ config }: VideoPlayerProps) {
     player.on("ready", () => {
       if (!disposed) {
         setStatus("Ready");
+        setPlaybackStats(player.getPlaybackStats());
       }
     });
 
@@ -95,6 +112,12 @@ export function VideoPlayer({ config }: VideoPlayerProps) {
     player.on("ended", () => {
       if (!disposed) {
         setStatus("Ended");
+      }
+    });
+
+    player.on("timeupdate", () => {
+      if (!disposed) {
+        setPlaybackStats(player.getPlaybackStats());
       }
     });
 
@@ -184,6 +207,39 @@ export function VideoPlayer({ config }: VideoPlayerProps) {
           </select>
         </div>
       )}
+      <div className="playback-stats">
+        <div>
+          <span>Resolution</span>
+          <strong>
+            {playbackStats.width > 0
+              ? `${playbackStats.width} × ${playbackStats.height}`
+              : "Detecting..."}
+          </strong>
+        </div>
+
+        <div>
+          <span>Bitrate</span>
+          <strong>
+            {playbackStats.bitrate > 0
+              ? `${(playbackStats.bitrate / 1_000_000).toFixed(2)} Mbps`
+              : "N/A"}
+          </strong>
+        </div>
+
+        <div>
+          <span>Network bandwidth</span>
+          <strong>
+            {playbackStats.bandwidth > 0
+              ? `${(playbackStats.bandwidth / 1_000_000).toFixed(2)} Mbps`
+              : "Measuring..."}
+          </strong>
+        </div>
+
+        <div>
+          <span>Quality mode</span>
+          <strong>{selectedQuality === "auto" ? "Auto" : "Manual"}</strong>
+        </div>
+      </div>
       <div className="player-status">Status: {status}</div>
 
       {error && (
