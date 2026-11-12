@@ -66,3 +66,20 @@ export interface PlaybackStats {
   bitrate: number;
   bandwidth: number;
 }
+
+/**
+ * Metric	Meaning
+Startup time:	Initialization start to first playing event
+Rebuffer count:	Number of post-start buffering interruptions that recover
+Total rebuffering:	Cumulative duration of those interruptions
+Error count:	Number of Video.js error events
+Last error:	Most recent error message
+ */
+
+export interface PlaybackMetrics {
+  startupTimeMs: number | null;
+  rebufferCount: number;
+  totalRebufferingMs: number;
+  errorCount: number;
+  lastError: string | null;
+}

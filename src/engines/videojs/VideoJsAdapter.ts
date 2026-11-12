@@ -8,6 +8,7 @@ import type {
   VHSRepresentation,
   QualityLevel,
   PlaybackStats,
+  PlaybackMetrics,
 } from "../../types/player.types";
 import type {
   PlayerEventData,
@@ -37,6 +38,17 @@ export class VideoJsAdapter implements IPlayerEngine {
 
   private emit?: PlayerEventListener;
   private supportedFormats = ["mp4", "hls"];
+  private sessionStartedAt = 0;
+  private hasStartedPlayback = false;
+  private bufferingStartedAt: number | null = null;
+
+  private playbackMetrics: PlaybackMetrics = {
+    startupTimeMs: null,
+    rebufferCount: 0,
+    totalRebufferingMs: 0,
+    errorCount: 0,
+    lastError: null,
+  };
 
   async initialize(
     videoElement: HTMLVideoElement,
@@ -58,6 +70,17 @@ export class VideoJsAdapter implements IPlayerEngine {
     }
 
     this.emit = emit;
+    this.sessionStartedAt = performance.now();
+    this.hasStartedPlayback = false;
+    this.bufferingStartedAt = null;
+
+    this.playbackMetrics = {
+      startupTimeMs: null,
+      rebufferCount: 0,
+      totalRebufferingMs: 0,
+      errorCount: 0,
+      lastError: null,
+    };
 
     const player = videojs(videoElement, {
       controls: config.controls ?? true,
@@ -129,6 +152,19 @@ export class VideoJsAdapter implements IPlayerEngine {
     if (!player) return;
 
     player.on("playing", () => {
+      const now = performance.now();
+      if (!this.hasStartedPlayback) {
+        // first successful playback: measure startup time
+        this.hasStartedPlayback = true;
+        this.playbackMetrics.startupTimeMs = now - this.sessionStartedAt;
+      } else if (this.bufferingStartedAt !== null) {
+        // Playback resumed after a rebuffering interruption
+        this.playbackMetrics.rebufferCount++;
+        this.playbackMetrics.totalRebufferingMs +=
+          now - this.bufferingStartedAt;
+
+        this.bufferingStartedAt = null;
+      }
       this.emitEvent({ type: "playing" });
     });
 
@@ -137,6 +173,14 @@ export class VideoJsAdapter implements IPlayerEngine {
     });
 
     player.on("waiting", () => {
+      // Count only buffering interruptions after playback started.
+      if (
+        this.hasStartedPlayback &&
+        !player.paused() &&
+        this.bufferingStartedAt === null
+      ) {
+        this.bufferingStartedAt = performance.now();
+      }
       this.emitEvent({ type: "buffering" });
     });
 
@@ -158,9 +202,14 @@ export class VideoJsAdapter implements IPlayerEngine {
 
     player.on("error", () => {
       const error = player.error();
+      const message = error?.message ?? "Unknown Video.js playback error";
+
+      this.playbackMetrics.errorCount++;
+      this.playbackMetrics.lastError = message;
+
       this.emitEvent({
         type: "error",
-        message: error?.message ?? "Unknown Video.js playback error",
+        message: message,
         originalError: error,
       });
     });
@@ -287,6 +336,10 @@ export class VideoJsAdapter implements IPlayerEngine {
       bitrate,
       bandwidth: vhs?.bandwidth ?? 0,
     };
+  }
+
+  getPlaybackMetrics(): PlaybackMetrics {
+    return { ...this.playbackMetrics };
   }
 
   async destroy(): Promise<void> {

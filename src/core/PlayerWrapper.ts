@@ -2,6 +2,7 @@ import type {
   PlayerConfig,
   PlayerCapabilities,
   PlaybackStats,
+  PlaybackMetrics,
   QualityLevel,
   QualitySelection,
 } from "../types/player.types";
@@ -116,6 +117,11 @@ export class PlayerWrapper {
   getPlaybackStats(): PlaybackStats {
     this.ensureInitalized();
     return this.engine!.getPlaybackStats();
+  }
+
+  getPlaybackMetrics(): PlaybackMetrics {
+    this.ensureInitalized();
+    return this.engine!.getPlaybackMetrics();
   }
 
   private ensureInitalized(): void {
