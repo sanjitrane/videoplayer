@@ -3,6 +3,7 @@ import type {
   PlayerCapabilities,
   PlaybackStats,
   PlaybackMetrics,
+  PlaybackDiagnosticsSnapshot,
   QualityLevel,
   QualitySelection,
 } from "../types/player.types";
@@ -122,6 +123,34 @@ export class PlayerWrapper {
   getPlaybackMetrics(): PlaybackMetrics {
     this.ensureInitalized();
     return this.engine!.getPlaybackMetrics();
+  }
+
+  getDiagnosticsSnapshot(): PlaybackDiagnosticsSnapshot {
+    this.ensureInitalized();
+    const currentTime = this.engine!.getCurrentTime();
+    const duration = this.engine!.getDuration();
+    let bufferedSeconds = 0;
+
+    if (this.videoElement) {
+      const buffered = this.videoElement.buffered;
+      for (let i = 0; i < buffered.length; i++) {
+        const start = buffered.start(i);
+        const end = buffered.end(i);
+
+        if (currentTime >= start && currentTime <= end) {
+          bufferedSeconds = Math.max(0, end - currentTime);
+          break;
+        }
+      }
+    }
+    return {
+      currentTime,
+      duration,
+      bufferedSeconds,
+      playbackStats: this.engine!.getPlaybackStats(),
+      playbackMetrics: this.engine!.getPlaybackMetrics(),
+      availableQualities: this.engine!.getAvailableQualities(),
+    };
   }
 
   private ensureInitalized(): void {

@@ -83,3 +83,12 @@ export interface PlaybackMetrics {
   errorCount: number;
   lastError: string | null;
 }
+
+export interface PlaybackDiagnosticsSnapshot {
+  currentTime: number;
+  duration: number;
+  bufferedSeconds: number;
+  playbackStats: PlaybackStats;
+  playbackMetrics: PlaybackMetrics;
+  availableQualities: QualityLevel[];
+}

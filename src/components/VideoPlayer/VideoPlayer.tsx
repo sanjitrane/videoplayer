@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { PlayerWrapper } from "../../core/PlayerWrapper";
 import { engineFactory } from "../../core/EngineFactory";
+import { PlaybackDiagnostics } from "../PlaybackDiagnostics/PlaybackDiagnostics";
+import type { PlaybackDiagnosticsSnapshot } from "../../types/player.types";
 import type {
   PlaybackStats,
   PlayerConfig,
@@ -20,6 +22,8 @@ export function VideoPlayer({ config }: VideoPlayerProps) {
   const [error, setError] = useState<string | null>(null);
   const [qualityLevels, setQualityLevels] = useState<QualityLevel[]>([]);
   const [selectedQuality, setSelectedQuality] = useState("auto");
+  const [diagnostics, setDiagnostics] =
+    useState<PlaybackDiagnosticsSnapshot | null>(null);
   const [playbackStats, setPlaybackStats] = useState<PlaybackStats>({
     width: 0,
     height: 0,
@@ -172,6 +176,19 @@ export function VideoPlayer({ config }: VideoPlayerProps) {
     };
   }, [config]);
 
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      const player = playerRef.current;
+      if (!player) return;
+      try {
+        setDiagnostics(player.getDiagnosticsSnapshot());
+      } catch {
+        //Player may be initializing or already destroyed.
+      }
+    }, 1000);
+    return () => window.clearInterval(intervalId);
+  }, []);
+
   const handleQualityChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const quality = event.target.value;
     try {
@@ -241,7 +258,7 @@ export function VideoPlayer({ config }: VideoPlayerProps) {
         </div>
       </div>
       <div className="player-status">Status: {status}</div>
-
+      <PlaybackDiagnostics status={status} snapShot={diagnostics} />
       {error && (
         <div className="player-error" role="alert">
           {error}

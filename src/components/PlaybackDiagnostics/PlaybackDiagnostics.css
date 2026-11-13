@@ -1,0 +1,63 @@
+.diagnostics {
+  margin-top: 16px;
+  padding: 16px;
+  background: #15191f;
+  color: #f1f5f9;
+  border-radius: 8px;
+  font-family: Arial, sans-serif;
+}
+
+.diagnostics-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.diagnostics-header h2,
+.diagnostics h3 {
+  margin: 0 0 12px;
+}
+
+.diagnostics-live {
+  color: #22c55e;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.diagnostics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.diagnostics-grid div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.diagnostics-grid span {
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.diagnostics-grid strong {
+  font-size: 14px;
+}
+
+.diagnostics-error {
+  color: #f87171;
+  margin-bottom: 16px;
+}
+
+.diagnostics ul {
+  padding-left: 20px;
+}
+
+@media (min-width: 768px) {
+  .diagnostics-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
