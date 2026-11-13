@@ -1,9 +1,14 @@
-import type { PlaybackDiagnosticsSnapshot } from "../../types/player.types";
+import { PlaybackEventLog } from "./PlaybackEventLog";
+import type {
+  PlaybackDiagnosticsSnapshot,
+  PlaybackLogEntry,
+} from "../../types/player.types";
 import "./PlaybackDiagnostics.css";
 
 interface PlaybackDiagnosticsProps {
   status: string;
   snapShot: PlaybackDiagnosticsSnapshot | null;
+  events: PlaybackLogEntry[];
 }
 
 function formatTime(seconds: number): string {
@@ -20,6 +25,7 @@ function formatBitrate(bitrate: number): string {
 export function PlaybackDiagnostics({
   status,
   snapShot,
+  events,
 }: PlaybackDiagnosticsProps) {
   if (!snapShot) {
     return <section className="diagnostics">Waiting for player...</section>;
@@ -99,6 +105,7 @@ export function PlaybackDiagnostics({
           ))}
         </ul>
       )}
+      <PlaybackEventLog events={events} />
     </section>
   );
 }

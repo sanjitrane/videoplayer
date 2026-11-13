@@ -1,6 +1,6 @@
 import type { PlayerConfig } from "../types/player.types";
 
-const mp4 = true;
+const mp4 = false;
 
 //MP4
 const mp4playerConfig: PlayerConfig = {

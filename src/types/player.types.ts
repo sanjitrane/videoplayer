@@ -92,3 +92,10 @@ export interface PlaybackDiagnosticsSnapshot {
   playbackMetrics: PlaybackMetrics;
   availableQualities: QualityLevel[];
 }
+
+export interface PlaybackLogEntry {
+  id: number;
+  timestamp: number;
+  event: string;
+  details?: string;
+}

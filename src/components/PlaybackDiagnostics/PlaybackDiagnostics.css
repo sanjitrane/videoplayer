@@ -61,3 +61,35 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+.event-log {
+  margin-top: 24px;
+  border-top: 1px solid #334155;
+  padding-top: 16px;
+}
+
+.event-log-list {
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.event-log-entry {
+  display: grid;
+  grid-template-columns: 100px 110px 1fr;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #27313e;
+  font-size: 12px;
+}
+
+.event-log-entry time {
+  color: #94a3b8;
+}
+
+.event-log-entry strong {
+  color: #38bdf8;
+}
+
+.event-log-entry span {
+  overflow-wrap: anywhere;
+}

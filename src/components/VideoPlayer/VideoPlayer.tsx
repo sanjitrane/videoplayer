@@ -2,10 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { PlayerWrapper } from "../../core/PlayerWrapper";
 import { engineFactory } from "../../core/EngineFactory";
 import { PlaybackDiagnostics } from "../PlaybackDiagnostics/PlaybackDiagnostics";
-import type { PlaybackDiagnosticsSnapshot } from "../../types/player.types";
 import type {
   PlaybackStats,
   PlayerConfig,
+  PlaybackDiagnosticsSnapshot,
+  PlaybackLogEntry,
   QualityLevel,
 } from "../../types/player.types";
 
@@ -24,12 +25,43 @@ export function VideoPlayer({ config }: VideoPlayerProps) {
   const [selectedQuality, setSelectedQuality] = useState("auto");
   const [diagnostics, setDiagnostics] =
     useState<PlaybackDiagnosticsSnapshot | null>(null);
+  const [showDiagnostics, setShowDiagnostics] = useState(true);
+  const [eventLogs, setEventLogs] = useState<PlaybackLogEntry[]>([]);
   const [playbackStats, setPlaybackStats] = useState<PlaybackStats>({
     width: 0,
     height: 0,
     bitrate: 0,
     bandwidth: 0,
   });
+
+  const handleQualityChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const quality = event.target.value;
+    try {
+      // "auto" or a specific rendition ID.
+      // This changes the allowed renditions in VHS.
+      // It does not immediately guarantee a resolution change.
+      // The next segment boundary may be required.
+      // The selected value represents the user's preference.
+      playerRef.current?.setQuality(quality);
+      setSelectedQuality(quality);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to change quality");
+    }
+  };
+
+  const addeventLog = (event: string, details?: string) => {
+    setEventLogs((previous) =>
+      [
+        ...previous,
+        {
+          id: Date.now() + Math.random(),
+          timestamp: Date.now(),
+          event,
+          details,
+        },
+      ].slice(-50),
+    );
+  };
 
   useEffect(() => {
     const container = containerRef.current;
@@ -110,12 +142,14 @@ export function VideoPlayer({ config }: VideoPlayerProps) {
     player.on("buffering", () => {
       if (!disposed) {
         setStatus("Buffering");
+        addeventLog("BUFFERING");
       }
     });
 
     player.on("ended", () => {
       if (!disposed) {
         setStatus("Ended");
+        addeventLog("ENDED");
       }
     });
 
@@ -127,8 +161,10 @@ export function VideoPlayer({ config }: VideoPlayerProps) {
 
     player.on("error", (event) => {
       if (!disposed) {
-        setError(event.message ?? "Playback error");
+        const message = event.message ?? "Playback error";
+        setError(message);
         setStatus("Error");
+        addeventLog("ERROR", message);
       }
     });
 
@@ -189,21 +225,6 @@ export function VideoPlayer({ config }: VideoPlayerProps) {
     return () => window.clearInterval(intervalId);
   }, []);
 
-  const handleQualityChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const quality = event.target.value;
-    try {
-      // "auto" or a specific rendition ID.
-      // This changes the allowed renditions in VHS.
-      // It does not immediately guarantee a resolution change.
-      // The next segment boundary may be required.
-      // The selected value represents the user's preference.
-      playerRef.current?.setQuality(quality);
-      setSelectedQuality(quality);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to change quality");
-    }
-  };
-
   return (
     <div className="video-player-container">
       <div ref={containerRef} data-vjs-player />
@@ -258,7 +279,19 @@ export function VideoPlayer({ config }: VideoPlayerProps) {
         </div>
       </div>
       <div className="player-status">Status: {status}</div>
-      <PlaybackDiagnostics status={status} snapShot={diagnostics} />
+      <button
+        type="button"
+        onClick={() => setShowDiagnostics((visible) => !visible)}
+      >
+        {showDiagnostics ? "Hide Diagnostics" : "Show Diagnostics"}
+      </button>
+      {showDiagnostics && (
+        <PlaybackDiagnostics
+          status={status}
+          snapShot={diagnostics}
+          events={eventLogs}
+        />
+      )}
       {error && (
         <div className="player-error" role="alert">
           {error}
