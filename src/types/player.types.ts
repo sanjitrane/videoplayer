@@ -91,6 +91,7 @@ export interface PlaybackDiagnosticsSnapshot {
   playbackStats: PlaybackStats;
   playbackMetrics: PlaybackMetrics;
   availableQualities: QualityLevel[];
+  networkStats: NetworkStats | null;
 }
 
 export interface PlaybackLogEntry {
@@ -98,4 +99,15 @@ export interface PlaybackLogEntry {
   timestamp: number;
   event: string;
   details?: string;
+}
+
+export interface NetworkStats {
+  bandwidth: number;
+  mediaRequests: number;
+  mediaRequestAborted: number;
+  mediaRequestsTimedout: number;
+  mediaRequestsErrored: number;
+  mediaBytesTransferred: number;
+  mediaTransferDuration: number;
+  mediaSecondsLoaded: number;
 }

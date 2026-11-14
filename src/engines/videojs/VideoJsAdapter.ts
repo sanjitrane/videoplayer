@@ -9,6 +9,7 @@ import type {
   QualityLevel,
   PlaybackStats,
   PlaybackMetrics,
+  NetworkStats,
 } from "../../types/player.types";
 import type {
   PlayerEventData,
@@ -22,6 +23,7 @@ type VideoJSPlayer = ReturnType<typeof videojs>;
 type VHSCompatibleTech = {
   vhs?: {
     representations: () => VHSRepresentation[];
+    stats?: Partial<NetworkStats>;
     bandwidth?: number;
     playlists?: {
       media: () => {
@@ -340,6 +342,29 @@ export class VideoJsAdapter implements IPlayerEngine {
 
   getPlaybackMetrics(): PlaybackMetrics {
     return { ...this.playbackMetrics };
+  }
+
+  getNetworkStats(): NetworkStats | null {
+    const player = this.player;
+    if (!player || player.isDisposed()) {
+      return null;
+    }
+    const tech = player.tech() as unknown as VHSCompatibleTech;
+    const stats = tech.vhs?.stats;
+    if (!stats) {
+      return null;
+    }
+
+    return {
+      bandwidth: stats.bandwidth ?? 0,
+      mediaRequests: stats.mediaRequests ?? 0,
+      mediaRequestAborted: stats.mediaRequestAborted ?? 0,
+      mediaRequestsTimedout: stats.mediaRequestsTimedout ?? 0,
+      mediaRequestsErrored: stats.mediaRequestsErrored ?? 0,
+      mediaBytesTransferred: stats.mediaBytesTransferred ?? 0,
+      mediaTransferDuration: stats.mediaTransferDuration ?? 0,
+      mediaSecondsLoaded: stats.mediaSecondsLoaded ?? 0,
+    };
   }
 
   async destroy(): Promise<void> {

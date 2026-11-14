@@ -6,6 +6,7 @@ import type {
   PlaybackDiagnosticsSnapshot,
   QualityLevel,
   QualitySelection,
+  NetworkStats,
 } from "../types/player.types";
 
 import type { PlayerEvent, PlayerEventListener } from "../types/events.types";
@@ -150,7 +151,13 @@ export class PlayerWrapper {
       playbackStats: this.engine!.getPlaybackStats(),
       playbackMetrics: this.engine!.getPlaybackMetrics(),
       availableQualities: this.engine!.getAvailableQualities(),
+      networkStats: this.engine!.getNetworkStats(),
     };
+  }
+
+  getNetworkStats(): NetworkStats | null {
+    this.ensureInitalized();
+    return this.engine!.getNetworkStats();
   }
 
   private ensureInitalized(): void {

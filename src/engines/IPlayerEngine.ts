@@ -5,6 +5,7 @@ import type {
   QualitySelection,
   PlaybackStats,
   PlaybackMetrics,
+  NetworkStats,
 } from "../types/player.types";
 import type { PlayerEventListener } from "../types/events.types";
 
@@ -30,4 +31,5 @@ export interface IPlayerEngine {
   setQuality(quality: QualitySelection): void;
   getPlaybackStats(): PlaybackStats;
   getPlaybackMetrics(): PlaybackMetrics;
+  getNetworkStats(): NetworkStats | null;
 }
