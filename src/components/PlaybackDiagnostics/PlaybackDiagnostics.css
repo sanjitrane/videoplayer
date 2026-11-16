@@ -93,3 +93,7 @@
 .event-log-entry span {
   overflow-wrap: anywhere;
 }
+.diagnostics-unavailable {
+  color: #94a3b8;
+  font-size: 13px;
+}

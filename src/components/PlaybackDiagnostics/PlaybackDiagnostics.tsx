@@ -4,22 +4,16 @@ import type {
   PlaybackLogEntry,
 } from "../../types/player.types";
 import "./PlaybackDiagnostics.css";
+import { NetworkDiagnostics } from "./NetworkDiagnostics";
+import { AvailableQualities } from "./AvailableQualities";
+import { PlaybackMetricsSection } from "./PlaybackMetricsSection";
+import { PlaybackStatsSection } from "./PlaybackStatsSection";
+import { formatTime } from "../../utils";
 
 interface PlaybackDiagnosticsProps {
   status: string;
   snapShot: PlaybackDiagnosticsSnapshot | null;
   events: PlaybackLogEntry[];
-}
-
-function formatTime(seconds: number): string {
-  if (!Number.isFinite(seconds)) return "00:00";
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = Math.floor(seconds % 60);
-  return `${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
-}
-
-function formatBitrate(bitrate: number): string {
-  return bitrate > 0 ? `${(bitrate / 1_00_000).toFixed(2)} Mbps` : "N/A";
 }
 
 export function PlaybackDiagnostics({
@@ -31,7 +25,8 @@ export function PlaybackDiagnostics({
     return <section className="diagnostics">Waiting for player...</section>;
   }
 
-  const { playbackStats, playbackMetrics } = snapShot;
+  const { playbackStats, playbackMetrics, networkStats, availableQualities } =
+    snapShot;
   return (
     <section className="diagnostics">
       <div className="diagnostics-header">
@@ -49,63 +44,20 @@ export function PlaybackDiagnostics({
             {formatTime(snapShot.currentTime)} / {formatTime(snapShot.duration)}
           </strong>
         </div>
-        <div>
-          <span>Resolution</span>
-          <strong>
-            {playbackStats.width || 0} x {playbackStats.height || 0}
-          </strong>
-        </div>
-        <div>
-          <span>Bitrate</span>
-          <strong>{formatBitrate(playbackStats.bitrate)}</strong>
-        </div>
-        <div>Bandwidth</div>
-        <strong>{formatBitrate(playbackStats.bandwidth)}</strong>
-      </div>
-      <div>
+        {playbackStats && (
+          <PlaybackStatsSection playbackStats={playbackStats} />
+        )}
         <span>Buffer health</span>
         <strong>{snapShot.bufferedSeconds.toFixed(1)} sec</strong>
       </div>
-      <h3>Playback Metrics</h3>
-      <div className="diagnostics-grid">
-        <div>
-          <span>Startup Time</span>
-          <strong>
-            {playbackMetrics.startupTimeMs !== null
-              ? `${playbackMetrics.startupTimeMs.toFixed(0)} ms`
-              : "N/A"}
-          </strong>
-        </div>
-        <div>
-          <span>Rebuffer duration</span>
-          <strong>
-            {(playbackMetrics.totalRebufferingMs / 1000).toFixed(1)} sec
-          </strong>
-        </div>
-        <div>
-          <span>Error Count</span>
-          <strong>{playbackMetrics.errorCount}</strong>
-        </div>
-      </div>
-      {playbackMetrics.lastError && (
-        <div className="diagnostics-error">
-          Last Error: {playbackMetrics.lastError}
-        </div>
+      {playbackMetrics && (
+        <PlaybackMetricsSection playbackMetrics={playbackMetrics} />
       )}
-      <h3>Available Qualities</h3>
-      {snapShot.availableQualities.length === 0 ? (
-        <p>No quality information available</p>
-      ) : (
-        <ul>
-          {snapShot.availableQualities.map((quality) => (
-            <li key={quality.id}>
-              {quality.width} x {quality.height} -{" "}
-              {formatBitrate(quality.bitrate)}
-            </li>
-          ))}
-        </ul>
+      {availableQualities && (
+        <AvailableQualities availableQualities={availableQualities} />
       )}
       <PlaybackEventLog events={events} />
+      {networkStats && <NetworkDiagnostics networkStats={networkStats} />}
     </section>
   );
 }
