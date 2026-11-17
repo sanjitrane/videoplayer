@@ -97,3 +97,79 @@
   color: #94a3b8;
   font-size: 13px;
 }
+
+.recovery-section {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.recovery-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.recovery-header h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.recovery-status {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.recovery-success {
+  color: #167c3a;
+  background: #e6f4ea;
+}
+
+.recovery-warning {
+  color: #946200;
+  background: #fff4d6;
+}
+
+.recovery-error {
+  color: #b42318;
+  background: #fee4e2;
+}
+
+.recovery-neutral {
+  color: #555;
+  background: #eee;
+}
+
+.recovery-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.recovery-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.recovery-grid span {
+  color: #777;
+  font-size: 12px;
+}
+
+.recovery-grid strong {
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+
+@media (max-width: 600px) {
+  .recovery-grid {
+    grid-template-columns: 1fr;
+  }
+}

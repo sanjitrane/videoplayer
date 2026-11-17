@@ -17,6 +17,7 @@ import type { IPlayerEngine } from "../engines/IPlayerEngine";
 
 import { EngineFactory } from "./EngineFactory";
 import { EventManager } from "./EventManager";
+import type { RecoveryStatus } from "../types/errors.types";
 
 export class PlayerWrapper {
   private engine?: IPlayerEngine;
@@ -159,6 +160,7 @@ export class PlayerWrapper {
         currentQuality: this.engine!.getCurrentQuality(),
         qualitySwitches: this.engine!.getQualitySwitches(),
       },
+      recoveryStatus: this.engine!.getRecoveryStatus(),
     };
   }
 
@@ -180,6 +182,11 @@ export class PlayerWrapper {
   getQualitySwitches(): QualitySwitchEvent[] {
     this.ensureInitalized();
     return this.engine!.getQualitySwitches();
+  }
+
+  getRecoveryStatus(): RecoveryStatus {
+    this.ensureInitalized();
+    return this.engine!.getRecoveryStatus();
   }
 
   private ensureInitalized(): void {

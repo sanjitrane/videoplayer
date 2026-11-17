@@ -1,3 +1,4 @@
+import type { PlayerError } from "./errors.types";
 import type { QualityLevel, QualityMode } from "./player.types";
 
 export type PlayerEvent =
@@ -20,6 +21,7 @@ export interface PlayerEventData {
   previousQuality?: QualityLevel | null;
   currentQuality?: QualityLevel | null;
   qualityMode?: QualityMode;
+  playerError?: PlayerError;
 }
 
 export type PlayerEventListener = (event: PlayerEventData) => void;

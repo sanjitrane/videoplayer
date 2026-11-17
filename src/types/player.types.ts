@@ -1,3 +1,5 @@
+import type { RecoveryStatus } from "./errors.types";
+
 export type PlayerEngine = "videojs" | "shaka" | "hlsjs" | "dashjs";
 
 export type StreamingFormat = "mp4" | "hls" | "dash";
@@ -93,6 +95,7 @@ export interface PlaybackDiagnosticsSnapshot {
   availableQualities: QualityLevel[];
   networkStats: NetworkStats | null;
   abrDiagnostics: ABRDiagnostics;
+  recoveryStatus: RecoveryStatus;
 }
 
 export interface PlaybackLogEntry {

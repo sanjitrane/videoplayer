@@ -1,5 +1,7 @@
 import videojs from "video.js";
 import "video.js/dist/video-js.css";
+import { VideoJSErrorHandler } from "./VideoJsErrorHandler";
+import { RecoveryManager } from "../../core/RecoveryManager";
 
 import type {
   PlayerConfig,
@@ -20,7 +22,14 @@ import type {
 
 import type { IPlayerEngine } from "../IPlayerEngine";
 
-type VideoJSPlayer = ReturnType<typeof videojs>;
+import type {
+  RecoveryAction,
+  PlayerError,
+  RecoveryStatus,
+} from "../../types/errors.types";
+import type Player from "video.js/dist/types/player";
+
+type VideoJSPlayer = Player;
 
 type VHSCompatibleTech = {
   vhs?: {
@@ -43,6 +52,7 @@ type VHSCompatibleTech = {
 
 export class VideoJsAdapter implements IPlayerEngine {
   private player: VideoJSPlayer | null = null;
+  private recoveryManager = new RecoveryManager();
 
   private emit?: PlayerEventListener;
   private supportedFormats = ["mp4", "hls"];
@@ -125,6 +135,7 @@ export class VideoJsAdapter implements IPlayerEngine {
 
     this.player = player;
     this.registerEvents();
+    this.recoveryManager.reset();
 
     await new Promise<void>((resolve, reject) => {
       player.ready(() => {
@@ -216,7 +227,10 @@ export class VideoJsAdapter implements IPlayerEngine {
 
     player.on("error", () => {
       const error = player.error();
-      const message = error?.message ?? "Unknown Video.js playback error";
+      const playerError = VideoJSErrorHandler.classify(player);
+      if (!playerError) return;
+
+      const message = playerError.message;
 
       this.playbackMetrics.errorCount++;
       this.playbackMetrics.lastError = message;
@@ -225,7 +239,103 @@ export class VideoJsAdapter implements IPlayerEngine {
         type: "error",
         message: message,
         originalError: error,
+        playerError,
       });
+
+      const recoveryAction = this.getRecoveryAction(playerError);
+      if (recoveryAction === "none") {
+        return;
+      }
+      void this.recoveryManager.execute(playerError, recoveryAction, () =>
+        this.reloadCurrentSource(),
+      );
+    });
+  }
+
+  private getRecoveryAction(error: PlayerError): RecoveryAction {
+    if (error.severity !== "recoverable") {
+      return "none";
+    }
+
+    switch (error.type) {
+      case "network":
+        return "retry";
+      case "decode":
+        return "reload";
+      default:
+        return "none";
+    }
+  }
+
+  private async reloadCurrentSource(): Promise<void> {
+    const player = this.getPlayer();
+    const source = player.currentSrc();
+    const currentTime = player.currentTime() || 0;
+    const wasPaused = player.paused();
+
+    if (!source) {
+      throw new Error("Cannot recover: current video source is unavailable");
+    }
+
+    await new Promise<void>((resolve, reject) => {
+      let settled = false;
+      const cleanup = () => {
+        player.off("loadedmetadata", onLoadedMetadata);
+        player.off("error", onError);
+        clearTimeout(timeout);
+      };
+
+      const finish = (error?: Error) => {
+        if (settled) {
+          return;
+        }
+        settled = true;
+        cleanup();
+        if (error) {
+          reject(error);
+        } else {
+          resolve();
+        }
+      };
+
+      const onError = () => {
+        finish(new Error("Video source reload failed during recovery"));
+      };
+
+      const onLoadedMetadata = async () => {
+        try {
+          if (Number.isFinite(currentTime) && currentTime > 0) {
+            player.currentTime(currentTime);
+          }
+          if (!wasPaused) {
+            await player.play();
+          }
+          finish();
+        } catch (error) {
+          finish(
+            error instanceof Error
+              ? error
+              : new Error("Playback restoration failed"),
+          );
+        }
+      };
+
+      const timeout = setTimeout(() => {
+        finish(new Error("Playback recovery timed out"));
+      }, 15000);
+
+      player.one("loadedmetadata", onLoadedMetadata);
+      player.one("error", onError);
+
+      try {
+        player.src(source);
+      } catch (error) {
+        finish(
+          error instanceof Error
+            ? error
+            : new Error("Unable to reload the video source"),
+        );
+      }
     });
   }
 
@@ -416,6 +526,10 @@ export class VideoJsAdapter implements IPlayerEngine {
     return [...this.qualitySwitches];
   }
 
+  getRecoveryStatus(): RecoveryStatus {
+    return this.recoveryManager.getStatus();
+  }
+
   async destroy(): Promise<void> {
     if (!this.player) {
       return;
@@ -428,6 +542,7 @@ export class VideoJsAdapter implements IPlayerEngine {
     this.currentQuality = null;
     this.qualitySwitches = [];
     this.qualityMode = "auto";
+    this.recoveryManager.stop();
   }
 
   private getPlayer(): VideoJSPlayer {

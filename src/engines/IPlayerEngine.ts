@@ -10,6 +10,7 @@ import type {
   QualitySwitchEvent,
 } from "../types/player.types";
 import type { PlayerEventListener } from "../types/events.types";
+import type { RecoveryStatus } from "../types/errors.types";
 
 export interface IPlayerEngine {
   initialize(
@@ -37,4 +38,5 @@ export interface IPlayerEngine {
   getCurrentQuality(): QualityLevel | null;
   getQualityMode(): QualityMode;
   getQualitySwitches(): QualitySwitchEvent[];
+  getRecoveryStatus(): RecoveryStatus;
 }
