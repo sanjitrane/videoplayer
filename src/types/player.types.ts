@@ -92,6 +92,7 @@ export interface PlaybackDiagnosticsSnapshot {
   playbackMetrics: PlaybackMetrics;
   availableQualities: QualityLevel[];
   networkStats: NetworkStats | null;
+  abrDiagnostics: ABRDiagnostics;
 }
 
 export interface PlaybackLogEntry {
@@ -110,4 +111,20 @@ export interface NetworkStats {
   mediaBytesTransferred: number;
   mediaTransferDuration: number;
   mediaSecondsLoaded: number;
+}
+
+export type QualityMode = "auto" | "manual";
+
+export interface QualitySwitchEvent {
+  id: number;
+  timestamp: number;
+  fromQuality: string;
+  toQuality: string;
+  mode: QualityMode;
+}
+
+export interface ABRDiagnostics {
+  mode: QualityMode;
+  currentQuality: QualityLevel | null;
+  qualitySwitches: QualitySwitchEvent[];
 }

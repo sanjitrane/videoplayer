@@ -10,6 +10,8 @@ import type {
   PlaybackStats,
   PlaybackMetrics,
   NetworkStats,
+  QualityMode,
+  QualitySwitchEvent,
 } from "../../types/player.types";
 import type {
   PlayerEventData,
@@ -29,6 +31,10 @@ type VHSCompatibleTech = {
       media: () => {
         attributes?: {
           BANDWIDTH?: number;
+          RESOLUTION?: {
+            width?: number;
+            height?: number;
+          };
         };
       } | null;
     };
@@ -43,6 +49,10 @@ export class VideoJsAdapter implements IPlayerEngine {
   private sessionStartedAt = 0;
   private hasStartedPlayback = false;
   private bufferingStartedAt: number | null = null;
+  private qualityMode: QualityMode = "auto";
+  private currentQuality: QualityLevel | null = null;
+  private qualitySwitches: QualitySwitchEvent[] = [];
+  private qualityCheckInterval: ReturnType<typeof setInterval> | null = null;
 
   private playbackMetrics: PlaybackMetrics = {
     startupTimeMs: null,
@@ -147,6 +157,8 @@ export class VideoJsAdapter implements IPlayerEngine {
         }
       });
     });
+
+    this.startQualityMonitoring();
   }
 
   private registerEvents(): void {
@@ -299,15 +311,24 @@ export class VideoJsAdapter implements IPlayerEngine {
 
   setQuality(quality: QualitySelection): void {
     const representations = this.getVHSRepresentations();
+    if (!representations.length) return;
+
     if (quality === "auto") {
+      this.qualityMode = "auto";
       representations.forEach((representation) => {
         representation.enabled(true);
       });
       return;
     }
+    const selectedRepresentation = representations.find(
+      (representation) => representation.id === quality,
+    );
+    if (!selectedRepresentation) return;
+
     representations.forEach((representation) => {
       representation.enabled(representation.id === quality);
     });
+    this.qualityMode = "manual";
   }
 
   getPlaybackStats(): PlaybackStats {
@@ -367,6 +388,34 @@ export class VideoJsAdapter implements IPlayerEngine {
     };
   }
 
+  getCurrentQuality(): QualityLevel | null {
+    const player = this.player;
+    if (!player || player.isDisposed()) {
+      return null;
+    }
+    const tech = player.tech() as unknown as VHSCompatibleTech;
+    const media = tech.vhs?.playlists?.media();
+    if (!media?.attributes) {
+      return null;
+    }
+
+    const resolution = media.attributes.RESOLUTION;
+    return {
+      id: `${resolution?.width ?? 0}x${resolution?.height ?? 0} `,
+      width: resolution?.width ?? 0,
+      height: resolution?.height ?? 0,
+      bitrate: media.attributes.BANDWIDTH ?? 0,
+    };
+  }
+
+  getQualityMode(): QualityMode {
+    return this.qualityMode;
+  }
+
+  getQualitySwitches(): QualitySwitchEvent[] {
+    return [...this.qualitySwitches];
+  }
+
   async destroy(): Promise<void> {
     if (!this.player) {
       return;
@@ -375,6 +424,10 @@ export class VideoJsAdapter implements IPlayerEngine {
     this.player = null;
     this.emit = undefined;
     player.dispose();
+    this.stopQualityMonitoring();
+    this.currentQuality = null;
+    this.qualitySwitches = [];
+    this.qualityMode = "auto";
   }
 
   private getPlayer(): VideoJSPlayer {
@@ -383,5 +436,44 @@ export class VideoJsAdapter implements IPlayerEngine {
     }
 
     return this.player;
+  }
+
+  private startQualityMonitoring(): void {
+    this.stopQualityMonitoring();
+    this.qualityCheckInterval = setInterval(() => {
+      const nextQuality = this.getCurrentQuality();
+      if (!nextQuality) return;
+      if (
+        this.currentQuality?.id === nextQuality.id &&
+        this.currentQuality?.bitrate === nextQuality.bitrate
+      ) {
+        return;
+      }
+      const previousQuality = this.currentQuality;
+      this.currentQuality = nextQuality;
+      if (!previousQuality) return;
+      const switchEvent: QualitySwitchEvent = {
+        id: Date.now(),
+        timestamp: Date.now(),
+        fromQuality: previousQuality.id,
+        toQuality: nextQuality.id,
+        mode: this.qualityMode,
+      };
+
+      this.qualitySwitches = [...this.qualitySwitches, switchEvent].slice(-20);
+      this.emitEvent({
+        type: "qualitychange",
+        previousQuality,
+        currentQuality: nextQuality,
+        qualityMode: this.qualityMode,
+      });
+    }, 1000);
+  }
+
+  private stopQualityMonitoring(): void {
+    if (this.qualityCheckInterval !== null) {
+      clearInterval(this.qualityCheckInterval);
+      this.qualityCheckInterval = null;
+    }
   }
 }

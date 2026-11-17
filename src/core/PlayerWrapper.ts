@@ -7,6 +7,8 @@ import type {
   QualityLevel,
   QualitySelection,
   NetworkStats,
+  QualitySwitchEvent,
+  QualityMode,
 } from "../types/player.types";
 
 import type { PlayerEvent, PlayerEventListener } from "../types/events.types";
@@ -152,12 +154,32 @@ export class PlayerWrapper {
       playbackMetrics: this.engine!.getPlaybackMetrics(),
       availableQualities: this.engine!.getAvailableQualities(),
       networkStats: this.engine!.getNetworkStats(),
+      abrDiagnostics: {
+        mode: this.engine!.getQualityMode(),
+        currentQuality: this.engine!.getCurrentQuality(),
+        qualitySwitches: this.engine!.getQualitySwitches(),
+      },
     };
   }
 
   getNetworkStats(): NetworkStats | null {
     this.ensureInitalized();
     return this.engine!.getNetworkStats();
+  }
+
+  getCurrentQuality(): QualityLevel | null {
+    this.ensureInitalized();
+    return this.engine!.getCurrentQuality();
+  }
+
+  getQualityMode(): QualityMode {
+    this.ensureInitalized();
+    return this.engine!.getQualityMode();
+  }
+
+  getQualitySwitches(): QualitySwitchEvent[] {
+    this.ensureInitalized();
+    return this.engine!.getQualitySwitches();
   }
 
   private ensureInitalized(): void {

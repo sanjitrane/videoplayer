@@ -9,6 +9,8 @@ import { AvailableQualities } from "./AvailableQualities";
 import { PlaybackMetricsSection } from "./PlaybackMetricsSection";
 import { PlaybackStatsSection } from "./PlaybackStatsSection";
 import { formatTime } from "../../utils";
+import { ABRSection } from "./ABRSection";
+import { BandwidthSection } from "./BandwidthSection";
 
 interface PlaybackDiagnosticsProps {
   status: string;
@@ -25,8 +27,13 @@ export function PlaybackDiagnostics({
     return <section className="diagnostics">Waiting for player...</section>;
   }
 
-  const { playbackStats, playbackMetrics, networkStats, availableQualities } =
-    snapShot;
+  const {
+    playbackStats,
+    playbackMetrics,
+    networkStats,
+    availableQualities,
+    abrDiagnostics,
+  } = snapShot;
   return (
     <section className="diagnostics">
       <div className="diagnostics-header">
@@ -58,6 +65,13 @@ export function PlaybackDiagnostics({
       )}
       <PlaybackEventLog events={events} />
       {networkStats && <NetworkDiagnostics networkStats={networkStats} />}
+      {abrDiagnostics && <ABRSection abrDiagnostics={abrDiagnostics} />}
+      {networkStats && abrDiagnostics && (
+        <BandwidthSection
+          networkStats={networkStats}
+          abrDiagnostics={abrDiagnostics}
+        />
+      )}
     </section>
   );
 }
