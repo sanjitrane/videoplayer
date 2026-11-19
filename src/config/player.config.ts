@@ -1,8 +1,8 @@
 import type { PlayerConfig } from "../types/player.types";
 
 const mp4 = false;
-const useShaka = true;
 const useShakaHls = true;
+const player: string = "hlsjs";
 
 //MP4
 const mp4playerConfig: PlayerConfig = {
@@ -53,10 +53,35 @@ const shakaHlsPlayerConfig: PlayerConfig = {
   engine: "shaka",
 };
 
-export const playerConfig = useShaka
-  ? useShakaHls
-    ? shakaHlsPlayerConfig
-    : shakaPlayerConfig
-  : mp4
-    ? mp4playerConfig
-    : hlsplayerConfig;
+const hlsJsPlayerConfig: PlayerConfig = {
+  ...hlsplayerConfig,
+  engine: "hlsjs",
+};
+
+const getPlayerConfig = (): PlayerConfig => {
+  let playerConfig: PlayerConfig;
+  switch (player) {
+    case "videojs":
+      playerConfig = mp4 ? mp4playerConfig : hlsplayerConfig;
+      break;
+    case "shaka":
+      playerConfig = useShakaHls ? shakaHlsPlayerConfig : shakaPlayerConfig;
+      break;
+    case "hlsjs":
+      playerConfig = hlsJsPlayerConfig;
+      break;
+    default:
+      playerConfig = mp4playerConfig;
+  }
+  return playerConfig;
+};
+
+export const playerConfig: PlayerConfig = getPlayerConfig();
+
+// export const playerConfig = useShaka
+//   ? useShakaHls
+//     ? shakaHlsPlayerConfig
+//     : shakaPlayerConfig
+//   : mp4
+//     ? mp4playerConfig
+//     : hlsplayerConfig;
