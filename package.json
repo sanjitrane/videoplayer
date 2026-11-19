@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": "22.23.5"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -12,6 +15,7 @@
   "dependencies": {
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
+    "shaka-player": "^5.3.5",
     "video.js": "^8.24.2"
   },
   "devDependencies": {

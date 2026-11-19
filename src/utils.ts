@@ -8,3 +8,7 @@ export function formatTime(seconds: number): string {
 export function formatBitrate(bitrate: number): string {
   return bitrate > 0 ? `${(bitrate / 1_00_000).toFixed(2)} Mbps` : "N/A";
 }
+
+export function toFiniteNumber(value: number): number {
+  return Number.isFinite(value) ? value : 0;
+}

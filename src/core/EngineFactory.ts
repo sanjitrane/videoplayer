@@ -1,6 +1,7 @@
 import type { PlayerEngine } from "../types/player.types";
 import type { IPlayerEngine } from "../engines/IPlayerEngine";
 import { VideoJsAdapter } from "../engines/videojs/VideoJsAdapter";
+import { ShakaAdapter } from "../engines/shaka/ShakaAdapter";
 
 export class EngineFactory {
   private engines = new Map<PlayerEngine, () => IPlayerEngine>();
@@ -20,3 +21,4 @@ export class EngineFactory {
 
 export const engineFactory = new EngineFactory();
 engineFactory.register("videojs", () => new VideoJsAdapter());
+engineFactory.register("shaka", () => new ShakaAdapter());

@@ -1,6 +1,8 @@
 import type { PlayerConfig } from "../types/player.types";
 
 const mp4 = false;
+const useShaka = true;
+const useShakaHls = true;
 
 //MP4
 const mp4playerConfig: PlayerConfig = {
@@ -20,7 +22,7 @@ const mp4playerConfig: PlayerConfig = {
 const hlsplayerConfig: PlayerConfig = {
   engine: "videojs",
   source: {
-    url: "https://d2zihajmogu5jn.cloudfront.net/bipbop-advanced/bipbop_16x9_variant.m3u8", //"https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+    url: "http://sample.vodobox.net/skate_phantom_flex_4k/skate_phantom_flex_4k.m3u8", //"https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
     format: "hls",
     mimeType: "application/x-mpegURL",
   },
@@ -34,4 +36,27 @@ const hlsplayerConfig: PlayerConfig = {
   volume: 0.8,
 };
 
-export const playerConfig = mp4 ? mp4playerConfig : hlsplayerConfig;
+const shakaPlayerConfig: PlayerConfig = {
+  engine: "shaka",
+  source: {
+    url: "https://storage.googleapis.com/shaka-demo-assets/angel-one/dash.mpd",
+    format: "dash",
+  },
+  autoplay: false,
+  muted: false,
+  controls: true,
+  volume: 0.8,
+};
+
+const shakaHlsPlayerConfig: PlayerConfig = {
+  ...hlsplayerConfig,
+  engine: "shaka",
+};
+
+export const playerConfig = useShaka
+  ? useShakaHls
+    ? shakaHlsPlayerConfig
+    : shakaPlayerConfig
+  : mp4
+    ? mp4playerConfig
+    : hlsplayerConfig;

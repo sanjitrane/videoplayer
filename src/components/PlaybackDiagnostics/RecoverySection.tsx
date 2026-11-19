@@ -6,7 +6,6 @@ interface Props {
 
 export const RecoverySection = ({ recoveryStatus }: Props) => {
   const {
-    isRecovering,
     retryCount,
     maxRetries,
     lastError,
