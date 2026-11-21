@@ -2,7 +2,7 @@ import type { PlayerConfig } from "../types/player.types";
 
 const mp4 = false;
 const useShakaHls = true;
-const player: string = "hlsjs";
+const player: string = "dashjs";
 
 //MP4
 const mp4playerConfig: PlayerConfig = {
@@ -58,6 +58,18 @@ const hlsJsPlayerConfig: PlayerConfig = {
   engine: "hlsjs",
 };
 
+const dashJsPlayerConfig: PlayerConfig = {
+  engine: "dashjs",
+  source: {
+    url: "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd",
+    format: "dash",
+  },
+  autoplay: false,
+  muted: false,
+  controls: true,
+  volume: 0.8,
+};
+
 const getPlayerConfig = (): PlayerConfig => {
   let playerConfig: PlayerConfig;
   switch (player) {
@@ -69,6 +81,9 @@ const getPlayerConfig = (): PlayerConfig => {
       break;
     case "hlsjs":
       playerConfig = hlsJsPlayerConfig;
+      break;
+    case "dashjs":
+      playerConfig = dashJsPlayerConfig;
       break;
     default:
       playerConfig = mp4playerConfig;

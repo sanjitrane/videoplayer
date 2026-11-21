@@ -3,6 +3,7 @@ import type { IPlayerEngine } from "../engines/IPlayerEngine";
 import { VideoJsAdapter } from "../engines/videojs/VideoJsAdapter";
 import { ShakaAdapter } from "../engines/shaka/ShakaAdapter";
 import { HlsJsAdapter } from "../engines/hlsjs/HlsJsAdapter";
+import { DashJsAdapter } from "../engines/dash/DashJsAdapter";
 
 export class EngineFactory {
   private engines = new Map<PlayerEngine, () => IPlayerEngine>();
@@ -24,3 +25,4 @@ export const engineFactory = new EngineFactory();
 engineFactory.register("videojs", () => new VideoJsAdapter());
 engineFactory.register("shaka", () => new ShakaAdapter());
 engineFactory.register("hlsjs", () => new HlsJsAdapter());
+engineFactory.register("dashjs", () => new DashJsAdapter());
